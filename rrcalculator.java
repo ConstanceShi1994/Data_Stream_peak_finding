@@ -1,50 +1,51 @@
-package mainactivity;
+package com.lannbox.rfduinotest;
 
-/**
- * Write a description of rrcalculator here.
- * 
- * @author (your name) 
- * @version (a version number or a date)
- */
+import android.util.Log;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Collections;
 import java.lang.Math;
+import static java.lang.String.valueOf;
+
 public class rrcalculator {
     private ArrayList<Float> smoothList;
     private ArrayList<Integer> peaks;
     private ArrayList<Float> aveList;
     private int firstIndexUpdate = 0;
     private double updatingrate = 0.02;
-    //private double min_height = 0.03;
+    //private double min_height = 0.34;
     public rrcalculator(){
         smoothList = new ArrayList<Float>();
         peaks = new ArrayList<Integer>();
         aveList = new ArrayList<Float>();
     }
-    
+
+
     public float CalculateSmooth(float xAcceleration, float yAcceleration, float zAcceleration){
         float smooth;
         aveList.add((xAcceleration+yAcceleration+zAcceleration)/3);
-        float sum_smooth = 0;
-        if (aveList.size() <= 100){
-            for (int i=0; i < aveList.size(); i++){
+        float sum_smooth=0;
+        if (aveList.size()<=100){
+            for (int i=0; i<aveList.size(); i++){
                 sum_smooth = aveList.get(i) + sum_smooth;
             }
         }
-        else{
+        else
+        {
             aveList.remove(0);
-            for (int i=0; i < aveList.size(); i++){
-                sum_smooth = aveList.get(i) + sum_smooth;
+            for(int i=0; i<aveList.size(); i++)
+            {
+                 sum_smooth = aveList.get(i) + sum_smooth;
             }
         }
-        
-        smooth = sum_smooth / aveList.size();
+
+        smooth = sum_smooth/aveList.size();
         return smooth;
     }
-    
+
+
     public ArrayList<Integer> fPeaks(ArrayList<Float> smoothList){
         boolean peakFound = false;
         int peak = 0;
@@ -62,7 +63,7 @@ public class rrcalculator {
         double median = 0;
         double maxx = Collections.max(smoothList);
         int horizontal_distance = Math.abs(smoothList.indexOf(Collections.min(smoothList)) - smoothList.indexOf(Collections.max(smoothList)));
-        for (int m=0; m<= smoothList.size()-1;m++){
+        for (int m=0; m<= smoothList.size()-1; m++){
             summ += smoothList.get(m);
         }
         average = summ/smoothList.size();
@@ -70,41 +71,40 @@ public class rrcalculator {
             median = (smoothList.get(smoothList.size()/2)+smoothList.get(smoothList.size()/2-1))/2;
         }
         if (difference > 0.0015 && difference < 0.003 && horizontal_distance >= 50){
-        while (i+width < smoothList.size()-8){
-            if (smoothList.get(i) >= smoothList.get(i-1)){
-                width = 0;
-                while (i+width < smoothList.size()-8 && smoothList.get(i) <= smoothList.get(i+width) && smoothList.get(i+width) <= smoothList.get(i+width+1)){
-                    width += 1;
-                }
-                if (smoothList.get(i+width) > smoothList.get(i+width+1)){
-                    if(i+width>7){
-                        for (int j =0; j<=9;j++){
-                            tempsum += smoothList.get(i+width-6+j)-smoothList.get(i+width-7+j);
-                        }
-                        slope = tempsum/8;
-                        if(Math.abs(slope) <= 0.000025 ){
-                            if(smoothList.get(i+width-1)>median && Math.abs(smoothList.get(i+width-1)-maxx)<=0.00014){
-                                tail.add(i+width-1); 
+            while (i+width < smoothList.size()-8){
+                if(smoothList.get(i) >= smoothList.get(i-1)){
+                    width = 0;
+                    while(i+width < smoothList.size()-8 && smoothList.get(i)<=smoothList.get(i+width) && smoothList.get(i+width)<=smoothList.get(i+width+1)){
+                        width += 1;
+                    }
+                    if (smoothList.get(i+width) > smoothList.get(i+width+1)){
+                        if(i+width>7){
+                            for(int j =0; j<=9; j++){
+                                tempsum += smoothList.get(i+width-6+j)-smoothList.get(i+width-7+j);
+                            }
+                            slope = tempsum/8;
+                            if(Math.abs(slope) <= 0.000025){
+                                if(smoothList.get(i+width-1)>median && Math.abs(smoothList.get(i+width-1)-maxx)<=0.00014){
+                                    tail.add(i+width-1);
+                                }
                             }
                         }
-                        
+                        i += width +1;
+                        slope = 0;
+                        tempsum = 0;
                     }
-                    i += width+1;
-                    slope = 0;
-                    tempsum =0;
+                    else{
+                        i+=width;
+                    }
                 }
                 else{
-                    i += width;
+                    i++;
                 }
             }
-            else{
-                i++;
-            }
         }
-        }
-        if (tail.size()>1){
-            for(int n=0; n<=tail.size()-1;n++){
-                if(smoothList.get(tail.get(n))>tempmax){
+        if(tail.size()>1){
+            for(int n=0; n<= tail.size()-1;n++){
+                if(smoothList.get(tail.get(n)) > tempmax){
                     tempmax = smoothList.get(tail.get(n));
                 }
             }
@@ -115,23 +115,78 @@ public class rrcalculator {
             }
         }
         return taill;
-        
+        // iterate of data
+//        for (int k=5; k< smoothList.size()-5; k++){
+//            if (smoothList.get(k) < smoothList.get(k-5) || smoothList.get(k) < smoothList.get(k+5)){
+//                peakFound = false;
+//                break;
+//            }
+//            else{
+//                peakFound = true;
+//                peak = k;
+//            }
+//        }
+        //if(smoothList.size()<100){
+        //    tail = new ArrayList<Float>(smoothList.subList(0, smoothList.size()));
+        //}
+        //else{
+        //    tail = new ArrayList<Float>(smoothList.subList(smoothList.size()-100, smoothList.size()));
+        //}
+        //peak = smoothList.indexOf(Collections.max(tail));
+        //return peak;
+        //while (i + width < smoothList.size()-2){
+        //    if(smoothList.get(i) > min_height && smoothList.get(i) >= smoothList.get(i-1)){
+        //        width = 1;
+        //        while (i + width < smoothList.size()-2 && smoothList.get(i) <= smoothList.get(i+width) && smoothList.get(i+width) <= smoothList.get(i+width+1)){
+        //            width += 1;
+        //        }
+        //        if (smoothList.get(i+width) > smoothList.get(i+width+1)){
+        //            tail.add(i+width);
+        //            i += width+1;
+        //        }
+        //        else{
+        //            i += width;
+        //        }
+        //    }
+        //    else{
+        //        i++;
+        //    }
+        //}
+        //return tail;
     }
-    
-    public int calculateRR(float smoothValue){
+
+    public double calculateRR(float smoothValue){
+        //if (smoothList.size() < 100){
+        //    smoothList.add(smoothValue);
+        //}
+        //else{
+        //    smoothList.remove(0);
+        //}
+        //smoothList.add(smoothValue);
+        //if (smoothList.size() > 100) {
+        //    smoothList.remove(0);
+        //    firstIndexUpdate += 1;
+        //}
+
+        //for (int i=0; i<fPeaks(smoothList).size(); i++){
+        //    if (!peaks.contains(fPeaks(smoothList).get(i))) {
+        //        // for ()
+
+        //        peaks.add(fPeaks(smoothList).get(i)+firstIndexUpdate);
+        //    }
+        //}
         double maxvalue = 0;
-        if (smoothList.size() == 100){
+        if(smoothList.size() == 100){
             smoothList.remove(0);
             smoothList.add(smoothValue);
-            firstIndexUpdate += 1;
+            firstIndexUpdate +=1;
         }
         else{
             smoothList.add(smoothValue);
         }
-        
-        for (int i=0; i < fPeaks(smoothList).size(); i++){
-            if (!peaks.contains(fPeaks(smoothList).get(i))){
-                
+
+        for(int i=0; i<fPeaks(smoothList).size();i++){
+            if(!peaks.contains(fPeaks(smoothList).get(i))){
                 if(peaks.size()<=1){
                     peaks.add(fPeaks(smoothList).get(i) + firstIndexUpdate);
                     maxvalue = smoothList.get(fPeaks(smoothList).get(i));
@@ -148,41 +203,36 @@ public class rrcalculator {
                         peaks.add(fPeaks(smoothList).get(i) + firstIndexUpdate);
                         maxvalue = 0;
                     }
-                    
                 }
             }
         }
-        
-        while(peaks.size() > 10){
+
+        while (peaks.size() > 10){
             peaks.remove(0);
         }
-        
+
+        //if (peaks.size() > 1){
+        //    for (int i=0; i<=peaks.size()-1; i++){
+        //        Log.d("WiSPR", "peaks: "+Integer.valueOf(peaks.get(i)).toString());
+        //    }
+        //}
+
         float R = 0;
         double RR;
         if (peaks.size() < 10){
-            for (int i=0; i < peaks.size()-1; i++){
+            for (int i=0; i<peaks.size()-1; i++){
                 R = R + peaks.get(i+1) - peaks.get(i);
             }
-            RR = R / (peaks.size()-1);
-            RR = RR * updatingrate;
-            
-        }
-        
-        else{
-            for (int i = 0; i < 9; i++){
-                R = R + peaks.get(i+1)-peaks.get(i);
-            }
             RR = R/(peaks.size()-1);
-            RR = RR*updatingrate;
-        }
-        
-        if (peaks.size() <=2){
-            return 0;
+            RR = RR*updatingrate;   // Assuming the update rate of 50 Hz
         }
         else{
-            return peaks.get(peaks.size()-2);
+            for (int i=0; i<9; i++){
+                R = R + peaks.get(i+1) - peaks.get(i);
+            }
+            RR = R/ (peaks.size()-1);
+            RR = RR * updatingrate;
         }
-        //return RR * 60;
+        return RR*60;
     }
-                
 }
